@@ -38,3 +38,14 @@ public/hot
 .phpunit.result.cache
 bootstrap/cache/*
 !bootstrap/cache/.gitignore
+# Allow placeholder .gitignore inside storage/framework subdirs
+/storage/framework/*
+!/storage/framework/.gitignore
+!/storage/framework/cache/
+!/storage/framework/cache/.gitignore
+!/storage/framework/cache/data/
+!/storage/framework/cache/data/.gitignore
+!/storage/framework/sessions/
+!/storage/framework/sessions/.gitignore
+!/storage/framework/views/
+!/storage/framework/views/.gitignore
