@@ -11,6 +11,10 @@ yarn-error.log*
 /.vscode/
 /.fleet
 
+# Vite artifacts (jangan di-commit)
+public/build
+public/hot
+
 # Laravel storage
 /public/storage
 /storage/*.key
@@ -19,6 +23,14 @@ yarn-error.log*
 !/storage/app/public/.gitignore
 /storage/framework/*
 !/storage/framework/.gitignore
+/storage/framework/cache/*
+!/storage/framework/cache/.gitignore
+/storage/framework/cache/data/*
+!/storage/framework/cache/data/.gitignore
+/storage/framework/sessions/*
+!/storage/framework/sessions/.gitignore
+/storage/framework/views/*
+!/storage/framework/views/.gitignore
 /storage/logs/*
 !/storage/logs/.gitignore
 
