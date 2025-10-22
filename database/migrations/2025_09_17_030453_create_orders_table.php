@@ -11,18 +11,30 @@ return new class extends Migration
      */
     public function up(): void
     {
-      Schema::create('orders', function (Blueprint $table) {
-    $table->id();
-    $table->foreignId('user_id')->constrained()->onDelete('cascade');
-    $table->string('service'); // Tambahin di sini
-    $table->text('notes')->nullable(); // Tambahin di sini
-    $table->string('status')->default('pending'); // pending, processing, done
-    $table->integer('total_price')->default(0);
-    $table->dateTime('pickup_date')->nullable();
-    $table->dateTime('delivery_date')->nullable();
-    $table->timestamps();
-});
+        Schema::create('orders', function (Blueprint $table) {
+            $table->id();
+            
+            // Relasi ke user
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
 
+            // Relasi ke service
+            $table->foreignId('service_id')->constrained('services')->onDelete('cascade');
+
+            // Data order
+            $table->decimal('quantity', 8, 2)->default(1); // Kg / Pcs
+            $table->decimal('total_price', 12, 2)->default(0);
+
+            // ✅ Status enum sudah fix pakai bahasa Indonesia
+            $table->enum('status', ['pending', 'diproses', 'selesai', 'diantar'])->default('pending');
+
+            $table->text('notes')->nullable();
+
+            // Jadwal
+            $table->dateTime('pickup_date')->nullable();
+            $table->dateTime('delivery_date')->nullable();
+
+            $table->timestamps();
+        });
     }
 
     /**

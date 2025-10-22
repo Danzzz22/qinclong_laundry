@@ -1,0 +1,363 @@
+ {{-- resources/views/partials/navbar.blade.php --}}
+<nav
+  x-data="{ open:false, userMenu:false }"
+  class="fixed inset-x-0 top-0 z-50 nav-wrap"
+  x-on:keydown.escape.window="open=false; userMenu=false"
+>
+  <style>
+    :root{
+      --ink:#013C58; --ink2:#0B2D42;
+      --sky:#A8E8F9; --amber:#F5A201; --amber2:#FFBA42;
+
+      --nav-h: 58px;      /* tinggi nav mobile */
+      --nav-h-md: 68px;   /* tinggi nav desktop */
+      --avatar: 36px;     /* ukuran avatar */
+      --radius: 14px;
+    }
+
+    /* ===== NAV WRAP ===== */
+    .nav-wrap{
+      height: var(--nav-h);
+      backdrop-filter: saturate(160%) blur(8px);
+      background:
+        radial-gradient(900px 280px at -10% -20%, rgba(168,232,249,.18), transparent 55%),
+        radial-gradient(800px 260px at 110% -10%, rgba(255,211,91,.16), transparent 55%),
+        linear-gradient(180deg, rgba(1,60,88,.94), rgba(1,60,88,.88));
+      border-bottom: 1px solid rgba(168,232,249,.15);
+      transition: background .25s ease, box-shadow .25s ease, height .2s ease;
+    }
+    @media (min-width: 768px){ .nav-wrap{ height: var(--nav-h-md); } }
+    .nav-wrap.shrink{
+      background:
+        radial-gradient(900px 260px at -10% -40%, rgba(168,232,249,.14), transparent 55%),
+        radial-gradient(800px 240px at 110% -30%, rgba(255,211,91,.14), transparent 55%),
+        linear-gradient(180deg, rgba(1,60,88,.98), rgba(1,60,88,.94));
+      box-shadow: 0 10px 26px rgba(1,60,88,.25);
+      height: calc(var(--nav-h) - 6px);
+    }
+    @media (min-width: 768px){ .nav-wrap.shrink{ height: calc(var(--nav-h-md) - 8px); } }
+
+    .nav-inner{ height: 100%; }
+
+    /* ===== BRAND ===== */
+    .brand{
+      position: relative; color:#FFD35B; font-weight:900; letter-spacing:.2px;
+      text-shadow:0 1px 0 rgba(0,0,0,.18);
+      display:inline-flex; align-items:center; gap:.55rem;
+    }
+    .brand::before{
+      content:""; width:28px;height:28px;border-radius:8px;
+      background:linear-gradient(135deg,var(--amber2),var(--sky));
+      box-shadow:0 6px 16px rgba(245,162,1,.25), inset 0 1px 0 #fff8;
+    }
+
+    /* ===== LINKS ===== */
+    .nav-links{ position:relative; }
+    .nav-link{
+      position:relative; z-index:3; /* di atas kapsul */
+      display:inline-flex; align-items:center; gap:.45rem;
+      font-weight:800; color:rgba(168,232,249,.92);
+      padding:.40rem .70rem; border-radius:.7rem; line-height:1; font-size:.95rem;
+      transition: color .16s, background .16s, transform .12s, box-shadow .16s;
+    }
+    .nav-link:hover{ color:#FFBA42; background:rgba(168,232,249,.10) }
+    .nav-link:active{ transform:translateY(1px) }
+    /* default active (fallback saat JS mati). Akan di-override jika pill aktif */
+    .nav-link.active{
+      color:#102b3a;
+      background:linear-gradient(90deg,var(--amber),var(--amber2));
+      box-shadow:0 10px 22px rgba(245,162,1,.28)
+    }
+    /* underline halus */
+    .nav-link:not(.active)::after{
+      content:""; position:absolute; left:.55rem; right:.55rem; bottom:.14rem; height:2px;
+      background:linear-gradient(90deg,transparent,rgba(255,211,91,.75),transparent);
+      transform:scaleX(0); transform-origin:center; transition:transform .18s ease;
+    }
+    .nav-link:hover::after{ transform:scaleX(1) }
+
+    /* ===== PILL (kapsul geser) ===== */
+    .nav-pill{
+      position:absolute; left:0; top:0; width:0; height:0; opacity:0; pointer-events:none;
+      border-radius:.8rem;
+      background:linear-gradient(90deg,var(--amber),var(--amber2));
+      box-shadow:0 10px 22px rgba(245,162,1,.28);
+      z-index:2; /* DI ATAS background link, DI BAWAH teks (z-index:3 pada .nav-link) */
+      will-change: transform, width, height, opacity;
+    }
+    /* Saat pill dipakai, hilangkan background aktif & hover di link aktif agar tidak nutup kapsul */
+    .nav-links.has-pill .nav-link.active{ background:transparent !important; box-shadow:none !important; }
+    .nav-links.has-pill .nav-link.active:hover{ background:transparent !important; }
+
+    /* CTA */
+    .btn-cta{
+      background:linear-gradient(90deg,var(--amber),var(--amber2));
+      color:#102b3a; font-weight:900; border-radius:.8rem;
+      padding:.50rem .9rem; font-size:.92rem;
+      box-shadow:0 10px 22px rgba(245,162,1,.26);
+      transition:transform .12s ease, box-shadow .12s ease;
+    }
+    .btn-cta:hover{ transform:translateY(-1px) }
+
+    /* Avatar */
+    .avatar{
+      width:var(--avatar); height:var(--avatar); border-radius:999px;
+      background:#FFBA42; color:var(--ink);
+      display:grid; place-items:center; font-weight:900; font-size:.95rem;
+      box-shadow:0 6px 16px rgba(245,162,1,.32), inset 0 1px 0 #fff7;
+      transition: transform .12s ease;
+    }
+    .avatar:hover{ transform: translateY(-1px) }
+
+    /* Dropdown */
+    .dropdown{ background:#fff; border:1px solid #E5E7EB; border-radius:var(--radius); overflow:hidden; box-shadow:0 18px 40px rgba(1,60,88,.20) }
+    .drop-item{ display:flex; align-items:center; gap:.6rem; padding:.70rem .95rem; font-weight:800; color:#0B2D42; font-size:.95rem; transition: background .15s ease }
+    .drop-item:hover{ background:#F8FAFC }
+
+    /* Mobile */
+    .mobile-link{ display:block; padding:.70rem 1rem; border-radius:.7rem; font-weight:900; color:rgba(168,232,249,.98); font-size:1rem }
+    .mobile-link.active{ color:#102b3a; background:linear-gradient(90deg,var(--amber),var(--amber2)) }
+
+    .mobile-panel{ overflow:hidden; max-height:0; opacity:0; transition:max-height .3s ease, opacity .25s ease }
+    .mobile-panel[aria-expanded="true"]{ max-height:420px; opacity:1 }
+
+    @media (prefers-reduced-motion: reduce){
+      *{ animation-duration:.01ms !important; transition-duration:.01ms !important }
+    }
+  </style>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 nav-inner">
+    <div class="h-full flex items-center justify-between gap-3">
+      {{-- Brand --}}
+      <a href="{{ route('home') }}" class="brand text-lg md:text-xl">Qinclong Laundry</a>
+
+      {{-- Desktop links --}}
+      <div id="nav-links" class="nav-links hidden md:flex items-center gap-2">
+        <span class="nav-pill" id="nav-pill" aria-hidden="true"></span>
+
+        @guest
+          <a href="#home" class="nav-link" data-key="home">Home</a>
+          <a href="#about" class="nav-link" data-key="about">About</a>
+          <a href="#layanan" class="nav-link" data-key="services">Services</a>
+          <a href="#choose" class="nav-link" data-key="whyus">Why Us</a>
+          <a href="#testimoni" class="nav-link" data-key="testimonials">Testimonials</a>
+          <a href="#lokasi" class="nav-link" data-key="location">Location</a>
+        @endguest
+
+        @auth
+          @if(Auth::user()->role === 'admin')
+            <a href="{{ route('admin.dashboard') }}"      class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}"       data-key="admin.dashboard">Dashboard</a>
+            <a href="{{ route('admin.orders.index') }}"   class="nav-link {{ request()->routeIs('admin.orders.index') ? 'active' : '' }}"    data-key="admin.orders.index">Kelola Pesanan</a>
+            {{-- CHANGED: name route & active pattern --}}
+            <a href="{{ route('admin.services.index') }}" class="nav-link {{ request()->routeIs('admin.services.*') ? 'active' : '' }}"      data-key="admin.services">Kelola Layanan</a>
+            <a href="{{ route('admin.payments.index') }}" class="nav-link {{ request()->routeIs('admin.payments.index') ? 'active' : '' }}"  data-key="admin.payments.index">Kelola Pembayaran</a>
+            <a href="{{ route('admin.reports') }}"        class="nav-link {{ request()->routeIs('admin.reports') ? 'active' : '' }}"         data-key="admin.reports">Laporan</a>
+          @else
+            <a href="{{ route('user.dashboard') }}"       class="nav-link {{ request()->routeIs('user.dashboard') ? 'active' : '' }}"        data-key="user.dashboard">Dashboard</a>
+            <a href="{{ route('user.orders.create') }}"   class="nav-link {{ request()->routeIs('user.orders.create') ? 'active' : '' }}"    data-key="user.orders.create">Pesan</a>
+            <a href="{{ route('user.orders.history') }}"  class="nav-link {{ request()->routeIs('user.orders.history') ? 'active' : '' }}"   data-key="user.orders.history">Riwayat</a>
+          @endif
+        @endauth
+      </div>
+
+      {{-- Right: auth / avatar --}}
+      <div class="hidden md:flex items-center gap-2">
+        @guest
+          <a href="{{ route('login') }}" class="btn-cta">Masuk / Daftar</a>
+        @endguest
+
+        @auth
+          <div class="relative" @click.away="userMenu=false">
+            <button aria-haspopup="true" :aria-expanded="userMenu" @click="userMenu=!userMenu" class="avatar">
+              {{ strtoupper(mb_substr(Auth::user()->name,0,1)) }}
+            </button>
+            <div x-show="userMenu" x-transition class="dropdown absolute right-0 mt-2 w-56">
+              <div class="p-3 border-b">
+                <div class="text-sm font-extrabold text-[var(--ink2)]">{{ Auth::user()->name }}</div>
+                <div class="text-xs text-gray-500">{{ Auth::user()->email }}</div>
+              </div>
+
+              <a href="{{ route('profile.edit') }}" class="drop-item">
+                <i class="fa-solid fa-user-gear text-[var(--ink)]"></i> Kelola Profil
+              </a>
+
+              @if(Auth::user()->role !== 'admin')
+              <a href="{{ route('user.notifications.index') }}" class="drop-item">
+                <i class="fa-solid fa-bell text-[var(--ink)]"></i> Notifikasi
+              </a>
+              @endif
+
+              <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button class="drop-item w-full text-left">
+                  <i class="fa-solid fa-right-from-bracket text-red-600"></i> Keluar
+                </button>
+              </form>
+            </div>
+          </div>
+        @endauth
+      </div>
+
+      {{-- Mobile toggler --}}
+      <button @click="open=!open"
+              class="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg bg-white/10 text-white hover:bg-white/15"
+              :aria-expanded="open" aria-controls="mobile-panel" aria-label="Toggle navigation">
+        <svg x-show="!open" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+        <svg x-show="open" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  {{-- Mobile panel --}}
+  <div id="mobile-panel"
+       x-show="open"
+       x-transition
+       class="md:hidden border-t border-white/10 bg-[rgba(1,60,88,.96)] backdrop-blur mobile-panel"
+       :aria-expanded="open ? 'true' : 'false'">
+    <div class="max-w-7xl mx-auto px-4 py-2 space-y-1">
+      @guest
+        <a href="#home" class="mobile-link">Home</a>
+        <a href="#about" class="mobile-link">About</a>
+        <a href="#layanan" class="mobile-link">Services</a>
+        <a href="#choose" class="mobile-link">Why Us</a>
+        <a href="#testimoni" class="mobile-link">Testimonials</a>
+        <a href="#lokasi" class="mobile-link">Location</a>
+        <div class="pt-1"><a href="{{ route('login') }}" class="btn-cta block text-center">Masuk / Daftar</a></div>
+      @endguest
+
+      @auth
+        @if(Auth::user()->role === 'admin')
+          <a href="{{ route('admin.dashboard') }}" class="mobile-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">Dashboard</a>
+          <a href="{{ route('admin.orders.index') }}" class="mobile-link {{ request()->routeIs('admin.orders.index') ? 'active' : '' }}">Kelola Pesanan</a>
+          {{-- CHANGED: name route & active pattern --}}
+          <a href="{{ route('admin.services.index') }}" class="mobile-link {{ request()->routeIs('admin.services.*') ? 'active' : '' }}">Kelola Layanan</a>
+          <a href="{{ route('admin.payments.index') }}" class="mobile-link {{ request()->routeIs('admin.payments.index') ? 'active' : '' }}">Kelola Pembayaran</a>
+          <a href="{{ route('admin.reports') }}" class="mobile-link {{ request()->routeIs('admin.reports') ? 'active' : '' }}">Laporan</a>
+        @else
+          <a href="{{ route('user.dashboard') }}" class="mobile-link {{ request()->routeIs('user.dashboard') ? 'active' : '' }}">Dashboard</a>
+          <a href="{{ route('user.orders.create') }}" class="mobile-link {{ request()->routeIs('user.orders.create') ? 'active' : '' }}">Pesan</a>
+          <a href="{{ route('user.orders.history') }}" class="mobile-link {{ request()->routeIs('user.orders.history') ? 'active' : '' }}">Riwayat</a>
+          <a href="{{ route('user.notifications.index') }}" class="mobile-link">Notifikasi</a>
+        @endif
+
+        <div class="grid grid-cols-2 gap-2 pt-1">
+          <a href="{{ route('profile.edit') }}" class="btn-cta text-center">Profil</a>
+          <form method="POST" action="{{ route('logout') }}">
+            @csrf
+            <button class="btn-cta w-full text-center">Keluar</button>
+          </form>
+        </div>
+      @endauth
+    </div>
+  </div>
+
+  {{-- Font Awesome (jika belum ada di layout) --}}
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/js/all.min.js" defer></script>
+
+  {{-- Shrink-on-scroll + PILL SLIDE --}}
+  <script>
+    // Shrink nav saat scroll
+    const onScroll = () => {
+      const nav = document.querySelector('.nav-wrap');
+      if (!nav) return;
+      if (window.scrollY > 6) nav.classList.add('shrink'); else nav.classList.remove('shrink');
+    };
+    document.addEventListener('scroll', onScroll, {passive:true});
+    document.addEventListener('DOMContentLoaded', onScroll);
+
+    // ===== Sliding Capsule (antar-halaman) =====
+    (function(){
+      const linksWrap = document.getElementById('nav-links');
+      const pill = document.getElementById('nav-pill');
+      if(!linksWrap || !pill) return;
+
+      // aktifkan mode pill
+      linksWrap.classList.add('has-pill');
+
+      const getRectRel = (el) => {
+        const r = el.getBoundingClientRect();
+        const p = linksWrap.getBoundingClientRect();
+        return { x: r.left - p.left, y: r.top - p.top, w: r.width, h: r.height };
+      };
+
+      const getActive = () => linksWrap.querySelector('.nav-link.active') || linksWrap.querySelector('.nav-link');
+
+      // simpan posisi link saat klik (sebelum pindah halaman)
+      linksWrap.querySelectorAll('.nav-link').forEach(a=>{
+        a.addEventListener('click', (e)=>{
+          try{
+            const fr = getRectRel(e.currentTarget);
+            sessionStorage.setItem('navPillFrom', JSON.stringify(fr));
+          }catch(_){}
+        }, {capture:true});
+      });
+
+      function place(x,w,h,animate=true,opacity=1){
+        pill.style.transition = animate
+          ? 'transform .45s cubic-bezier(.22,.8,.26,.99), width .45s cubic-bezier(.22,.8,.26,.99), height .45s cubic-bezier(.22,.8,.26,.99), opacity .2s ease'
+          : 'none';
+        pill.style.transform = `translate(${x}px, 0px)`; // dalam baris yang sama
+        pill.style.width = `${w}px`;
+        pill.style.height = `${h}px`;
+        pill.style.opacity = `${opacity}`;
+      }
+
+      function snapToActive(noAnim=false){
+        const a = getActive(); if(!a) return;
+        const r = getRectRel(a);
+        place(r.x, r.w, r.h, !noAnim || false, 1);
+      }
+
+      // animasi dari posisi sebelumnya -> posisi link aktif
+      const fromStr = sessionStorage.getItem('navPillFrom');
+      if(fromStr){
+        try{
+          const fr = JSON.parse(fromStr);
+          place(fr.x, fr.w, fr.h, false, 1);
+          requestAnimationFrame(()=>{ void pill.offsetWidth; snapToActive(false); });
+        }catch(_){ snapToActive(true); }
+        sessionStorage.removeItem('navPillFrom');
+      }else{
+        // first load
+        snapToActive(true);
+      }
+
+      // ======== re-snap agar tidak "ilang" ========
+      // Saat resize / orientation berubah
+      window.addEventListener('resize', () => snapToActive(true));
+      window.addEventListener('orientationchange', () => snapToActive(true));
+
+      // Saat mouse masuk area navbar (kadang font/height berubah tipis)
+      const nav = document.querySelector('.nav-wrap');
+      if(nav){
+        nav.addEventListener('mouseenter', () => snapToActive(true));
+        // kalau tinggi nav berubah (mis. shrink), tunggu transisinya selesai lalu snap lagi
+        nav.addEventListener('transitionend', (ev) => {
+          if(ev.propertyName === 'height') snapToActive(true);
+        });
+      }
+
+      // Fonts ready: ukuran teks stabil baru snap (buat jaga2)
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(()=> snapToActive(true));
+      }
+    })();
+
+    // Tutup mobile menu saat klik link
+    document.addEventListener('click', (e)=>{
+      const panel = document.getElementById('mobile-panel');
+      if(!panel) return;
+      const a = e.target.closest('#mobile-panel a');
+      if(!a) return;
+      const root = document.querySelector('[x-data]');
+      if(root && root.__x) root.__x.$data.open = false;
+    });
+  </script>
+</nav>
+
+{{-- Spacer agar konten tidak ketutup nav (ikut tinggi nav) --}}
+<div class="h-[58px] md:h-[68px]"></div>
